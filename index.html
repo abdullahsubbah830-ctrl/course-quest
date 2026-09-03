@@ -1,0 +1,1187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Course Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&family=Permanent+Marker&display=swap">
+<style>
+  :root{
+    --paper:#F2F4F8; --board:#FFFFFF; --line:#D9DFE8; --line2:#C9D2DF;
+    --ink:#26303E; --muted:#68758A; --faint:#98A3B5;
+    --red:#D64545; --blue:#2F5FD0; --yellow:#F2C230; --green:#2FA96F;
+    --c-math:#2F5FD0; --c-sci:#7A4FC9; --c-fnd:#159A8C; --c-core:#E8862E;
+    --c-wri:#D6478F; --c-elec:#5E6C82; --c-ger:#D9A400; --c-free:#7E9C22;
+    --grid:rgba(47,95,208,.05);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:
+      repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px 28px),
+      var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size:14px;
+    display:flex; flex-direction:column;
+    overflow:hidden;
+  }
+  button{font-family:inherit; cursor:pointer;}
+  ::-webkit-scrollbar{height:10px; width:10px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--line2); border-radius:5px;}
+  ::-webkit-scrollbar-thumb:hover{background:#AFBACB;}
+
+  /* ============ HUD ============ */
+  header{
+    flex:0 0 auto; display:flex; align-items:center; gap:14px;
+    padding:10px 18px; border-bottom:1px solid var(--line);
+    background:var(--board);
+    box-shadow:0 1px 4px rgba(38,48,62,.06);
+    flex-wrap:wrap;
+  }
+  .logo{font-family:'Chakra Petch'; font-weight:700; font-size:19px; letter-spacing:.06em; white-space:nowrap; color:var(--ink);}
+  .logo .q{color:var(--blue);}
+  .logo small{display:block; font-size:10px; font-weight:500; letter-spacing:.22em; color:var(--faint); text-transform:uppercase;}
+  .hud-group{display:flex; align-items:center; gap:8px;}
+  select, .btn{
+    background:var(--board); color:var(--ink); border:1px solid var(--line2);
+    border-radius:8px; padding:8px 13px; font-size:13px; font-family:inherit;
+  }
+  select:focus-visible, .btn:focus-visible, .chip:focus-visible, .node:focus-visible, input:focus-visible{outline:2px solid var(--blue); outline-offset:2px;}
+  .btn:hover{background:#F0F3F8; border-color:#AFBACB;}
+  .btn.primary{background:var(--blue); color:#fff; border-color:var(--blue); font-weight:600;}
+  .btn.primary:hover{background:#2450B4;}
+  .btn.ghost{background:transparent;}
+  .btn.danger:hover{border-color:var(--red); color:var(--red);}
+  .btn:disabled{opacity:.4; cursor:default;}
+  .xp{flex:1 1 240px; min-width:200px; display:flex; align-items:center; gap:12px;}
+  .level-badge{
+    font-family:'Chakra Petch'; font-weight:600; font-size:12px; letter-spacing:.08em;
+    background:#FFF7DE; border:1px solid var(--yellow); border-radius:999px;
+    padding:5px 14px; white-space:nowrap; color:#8A6A00;
+  }
+  .xp-track{flex:1; height:14px; background:#E8ECF2; border:1px solid var(--line); border-radius:999px; overflow:hidden; display:flex;}
+  .xp-done{background:linear-gradient(90deg,#27935F,var(--green)); height:100%; transition:width .5s cubic-bezier(.2,.8,.2,1);}
+  .xp-planned{background:repeating-linear-gradient(-45deg, #A9C0F0 0 6px, #C3D3F5 6px 12px); height:100%; transition:width .5s cubic-bezier(.2,.8,.2,1);}
+  .xp-label{font-family:'IBM Plex Mono'; font-size:12px; color:var(--muted); white-space:nowrap; font-variant-numeric:tabular-nums;}
+  .xp-label b{color:var(--ink);}
+
+  /* ============ Tabs ============ */
+  nav{flex:0 0 auto; display:flex; gap:6px; padding:10px 18px 0; align-items:flex-end; flex-wrap:wrap;}
+  .tab{
+    font-family:'Chakra Petch'; font-weight:600; font-size:13px; letter-spacing:.1em; text-transform:uppercase;
+    background:transparent; color:var(--muted); border:1px solid transparent; border-bottom:none;
+    padding:9px 20px; border-radius:10px 10px 0 0;
+  }
+  .tab.active{background:var(--board); color:var(--blue); border-color:var(--line); box-shadow:0 -1px 3px rgba(38,48,62,.05);}
+  .tab:not(.active):hover{color:var(--ink);}
+  nav .spacer{flex:1;}
+  .zoomer{display:flex; gap:4px; padding-bottom:6px;}
+  .zoomer .btn{padding:4px 11px; font-family:'IBM Plex Mono'; font-size:13px;}
+  .zoomer .btn.fit{font-family:'Chakra Petch'; font-size:11px; letter-spacing:.06em;}
+  .legend{display:flex; gap:12px; align-items:center; padding:0 8px 8px; flex-wrap:wrap;}
+  .legend span{display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--muted);}
+  .dot{width:9px; height:9px; border-radius:3px; display:inline-block;}
+
+  main{flex:1; min-height:0; display:flex; flex-direction:column; border-top:1px solid var(--line); background:var(--board);}
+  .view{flex:1; min-height:0; display:none;}
+  .view.active{display:flex; flex-direction:column;}
+
+  /* ============ Skill tree ============ */
+  #treeWrap{flex:1; overflow:auto; position:relative; cursor:grab;
+    background:
+      repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px 28px),
+      var(--board);
+  }
+  #treeWrap.panning{cursor:grabbing;}
+  #treeScale{transform-origin:0 0;}
+  #treeCanvas{position:relative;}
+  #edgeSvg{position:absolute; inset:0; pointer-events:none;}
+  .edge{stroke:#C3CCDB; stroke-width:1.6; fill:none; opacity:.9; transition:stroke .15s, opacity .15s;}
+  .edge.coreq{stroke-dasharray:4 4;}
+  .edge.up{stroke:var(--red); stroke-width:2.4; opacity:1;}
+  .edge.down{stroke:var(--blue); stroke-width:2.4; opacity:1;}
+  .edge.dim{opacity:.15;}
+  .lane-label{
+    position:absolute; top:14px; font-family:'Chakra Petch'; font-weight:600; font-size:12px;
+    letter-spacing:.24em; text-transform:uppercase; color:var(--faint); text-align:center;
+  }
+  .band-label{position:absolute; font-family:'Chakra Petch'; font-weight:600; font-size:12px; letter-spacing:.24em; text-transform:uppercase; color:var(--faint);}
+
+  .node{
+    position:absolute; width:196px; min-height:60px; padding:8px 10px 8px 14px;
+    background:var(--board); border:1.5px solid var(--line2); border-radius:10px;
+    display:flex; gap:9px; align-items:center; cursor:pointer; -webkit-user-select:none; user-select:none;
+    box-shadow:0 1px 3px rgba(38,48,62,.08);
+    transition:transform .15s, box-shadow .15s, border-color .15s, opacity .2s;
+  }
+  .node::before{content:""; position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:9px 0 0 9px; background:var(--cat);}
+  .node .ico{font-size:19px; flex:0 0 auto;}
+  .node .tx{min-width:0;}
+  .node .code{font-family:'IBM Plex Mono'; font-weight:600; font-size:11px; letter-spacing:.03em; color:var(--cat);}
+  .node .nm{font-size:11.5px; line-height:1.25; color:var(--ink); overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
+  .node .cr{
+    position:absolute; right:7px; top:7px; font-family:'IBM Plex Mono'; font-size:10px;
+    color:var(--muted); background:#F0F3F7; border-radius:5px; padding:1px 5px;
+  }
+  .node .st{position:absolute; right:7px; bottom:6px; font-size:12px; line-height:1;}
+  .node:hover{transform:translateY(-2px); border-color:var(--cat); box-shadow:0 6px 18px rgba(38,48,62,.18); z-index:5;}
+  .node.locked{opacity:.5; border-style:dashed; box-shadow:none;}
+  .node.locked .ico{filter:grayscale(90%);}
+  .node.avail{border-color:var(--yellow); box-shadow:0 0 0 1px rgba(242,194,48,.5), 0 0 14px rgba(242,194,48,.45);}
+  .node.avail .st{animation:pulse 1.8s ease-in-out infinite;}
+  .node.done{border-color:var(--green); background:linear-gradient(180deg, rgba(47,169,111,.1), rgba(47,169,111,.03)), var(--board);}
+  .node.planned{border-color:var(--blue);}
+  .node .semtag{
+    position:absolute; left:12px; bottom:-9px; font-family:'IBM Plex Mono'; font-size:9.5px; font-weight:600;
+    background:#E3ECFC; border:1px solid var(--blue); color:#2450B4; padding:1px 7px; border-radius:999px;
+  }
+  .node.hl-up{border-color:var(--red); box-shadow:0 0 0 1px rgba(214,69,69,.35); z-index:4;}
+  .node.hl-down{border-color:var(--blue); box-shadow:0 0 0 1px rgba(47,95,208,.35); z-index:4;}
+  .node.hl-dim{opacity:.3;}
+  @keyframes pulse{0%,100%{transform:scale(1); opacity:1;} 50%{transform:scale(1.25); opacity:.6;}}
+
+  #tooltip{
+    position:fixed; z-index:60; max-width:280px; background:var(--board); border:1px solid var(--line2);
+    border-radius:10px; padding:11px 13px; font-size:12px; line-height:1.5; pointer-events:none;
+    box-shadow:0 10px 30px rgba(38,48,62,.25); display:none; color:var(--ink);
+  }
+  #tooltip .t-code{font-family:'IBM Plex Mono'; font-weight:600; color:var(--blue);}
+  #tooltip .t-req{color:var(--muted); margin-top:5px;}
+  #tooltip .t-req b{color:var(--ink); font-weight:600;}
+  #tooltip .t-state{margin-top:6px; font-weight:600;}
+
+  /* ============ Action card (popover) ============ */
+  #pop{
+    position:fixed; z-index:70; width:252px; background:var(--board); border:1px solid var(--line2);
+    border-radius:12px; box-shadow:0 14px 40px rgba(38,48,62,.28); padding:12px;
+  }
+  #pop .p-head{display:flex; gap:8px; align-items:flex-start; margin-bottom:10px;}
+  #pop .p-head .ico{font-size:20px;}
+  #pop .p-code{font-family:'IBM Plex Mono'; font-weight:600; font-size:12px; color:var(--pcat, var(--blue));}
+  #pop .p-nm{font-size:12px; color:var(--muted); line-height:1.3;}
+  #pop .p-cr{margin-left:auto; font-family:'IBM Plex Mono'; font-size:11px; color:var(--faint); white-space:nowrap;}
+  .pop-btn{
+    display:flex; align-items:center; gap:8px; width:100%; min-height:36px; margin-top:6px;
+    background:#F5F7FA; border:1px solid var(--line); border-radius:9px; padding:7px 11px;
+    font-size:12.5px; font-weight:500; color:var(--ink); text-align:left;
+  }
+  .pop-btn:hover{border-color:var(--blue); background:#EEF3FC;}
+  .pop-btn.good:hover{border-color:var(--green); background:#EDF8F2;}
+  .pop-btn.warn:hover{border-color:var(--red); background:#FCEFEF;}
+  #pop .p-sec{margin-top:10px; font-family:'Chakra Petch'; font-size:10px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; color:var(--faint);}
+  .sem-quick{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px;}
+  .sem-quick button{
+    font-family:'IBM Plex Mono'; font-size:10.5px; font-weight:600; padding:6px 8px;
+    background:#F5F7FA; border:1px solid var(--line); border-radius:7px; color:var(--ink);
+  }
+  .sem-quick button:hover{border-color:var(--blue); color:var(--blue);}
+  .sem-quick button.cur{background:#E3ECFC; border-color:var(--blue); color:#2450B4;}
+  #pop .p-req{margin-top:9px; font-size:11px; color:var(--muted); line-height:1.5;}
+  #pop .p-req b{font-family:'IBM Plex Mono'; font-size:10.5px;}
+
+  /* ============ Planner (the whiteboard) ============ */
+  #plannerBody{flex:1; min-height:0; display:flex;}
+  #bank{
+    flex:0 0 238px; border-right:1px solid var(--line); overflow-y:auto; padding:12px;
+    background:#EEF1F6;
+  }
+  #bank h3{
+    font-family:'Chakra Petch'; font-weight:600; font-size:11.5px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:8px;
+  }
+  #bankSearch{
+    width:100%; background:var(--board); border:1px solid var(--line2); border-radius:8px;
+    padding:8px 11px; font-size:12.5px; font-family:inherit; color:var(--ink); margin-bottom:6px;
+  }
+  #bankSearch::placeholder{color:var(--faint);}
+  #bank .hint{font-size:11px; color:var(--faint); margin-bottom:8px; line-height:1.45;}
+  .bank-cat{margin:12px 0 5px; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--faint); font-family:'Chakra Petch'; display:flex; align-items:center; gap:6px;}
+  .bank-cat::after{content:""; flex:1; height:1px; background:var(--line);}
+  .bank-empty{font-size:11.5px; color:var(--faint); padding:8px 2px;}
+  #cols{
+    flex:1; overflow-x:auto; overflow-y:hidden; display:flex; gap:12px; padding:16px 14px; align-items:stretch;
+    background:var(--board);
+    box-shadow:inset 0 2px 8px rgba(38,48,62,.05);
+  }
+  .sem-col{
+    flex:0 0 196px; display:flex; flex-direction:column; border:1.5px solid var(--line);
+    border-radius:12px; background:var(--board); min-height:0; position:relative;
+  }
+  .sem-col.past{border-color:#BFD8CB; background:#F4FAF6;}
+  .sem-col.drag-over{border-color:var(--blue); box-shadow:0 0 0 1px var(--blue), 0 0 16px rgba(47,95,208,.2);}
+  .col-head{
+    padding:10px 10px 6px 12px; border-bottom:2px solid var(--mk, var(--line)); display:flex; align-items:center; gap:6px;
+  }
+  .col-head .term{font-family:'Permanent Marker', 'Chakra Petch', cursive; font-size:15px; color:var(--mk, var(--ink)); letter-spacing:.02em;}
+  .col-head .yr{font-family:'Permanent Marker', cursive; font-size:13px; color:var(--mk, var(--ink)); opacity:.85;}
+  .col-tools{margin-left:auto; display:flex; gap:2px;}
+  .col-tools button{
+    background:none; border:none; color:var(--faint); font-size:13px; padding:3px 5px; border-radius:6px; line-height:1;
+  }
+  .col-tools button:hover{background:#F0F3F8; color:var(--ink);}
+  .col-tools .col-x:hover{color:var(--red);}
+  .col-tools .col-fill:hover{color:#8A6A00;}
+  .col-tools .col-done:hover{color:var(--green);}
+  .col-body{flex:1; overflow-y:auto; padding:9px; display:flex; flex-direction:column; gap:7px;}
+  .col-foot{
+    border-top:1px dashed var(--line); padding:6px 12px; font-size:11px;
+    color:var(--muted); display:flex; justify-content:space-between; align-items:baseline;
+  }
+  .col-foot .load b{font-family:'Permanent Marker', cursive; font-size:16px; font-weight:400; color:var(--ink);}
+  .col-foot .load.over b{color:var(--red);}
+  .col-foot .cum{color:var(--faint);}
+  .col-foot .cum b{font-family:'Permanent Marker', cursive; font-size:14px; font-weight:400; color:var(--mk, var(--blue));}
+  #addSem{
+    flex:0 0 150px; border:2px dashed var(--line2); border-radius:12px; background:transparent;
+    color:var(--muted); font-family:'Chakra Petch'; font-weight:600; font-size:12px; letter-spacing:.1em;
+  }
+  #addSem:hover{border-color:var(--blue); color:var(--blue);}
+
+  .chip{
+    position:relative; background:var(--board); border:1px solid #D3DAE4; border-radius:8px;
+    padding:7px 8px 7px 12px; display:flex; gap:7px; align-items:center; cursor:pointer; -webkit-user-select:none; user-select:none;
+    touch-action:none; box-shadow:0 1px 3px rgba(38,48,62,.14);
+    transform:rotate(var(--rot, 0deg));
+  }
+  .chip::before{content:""; position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:7px 0 0 7px; background:var(--cat);}
+  .chip .ico{font-size:15px; flex:0 0 auto;}
+  .chip .code{font-family:'IBM Plex Mono'; font-weight:600; font-size:10.5px; color:var(--cat); display:block;}
+  .chip .nm{font-size:10.5px; line-height:1.2; color:var(--muted); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .chip .cr{margin-left:auto; font-family:'IBM Plex Mono'; font-size:10px; color:var(--faint); flex:0 0 auto;}
+  .chip:hover{border-color:var(--cat);}
+  .chip.invalid{border-color:var(--red); box-shadow:0 0 0 1px rgba(214,69,69,.35);}
+  .chip.invalid::after{content:"!"; position:absolute; right:-6px; top:-7px; width:16px; height:16px; border-radius:50%;
+    background:var(--red); color:#fff; font-weight:700; font-size:11px; display:flex; align-items:center; justify-content:center;}
+  .chip.ghost{position:fixed; z-index:100; pointer-events:none; opacity:.94; transform:rotate(-2.5deg) scale(1.04); box-shadow:0 14px 30px rgba(38,48,62,.35); width:180px;}
+  .chip.drag-src{opacity:.3;}
+
+  /* ============ Modal / toast ============ */
+  #overlay{position:fixed; inset:0; background:rgba(38,48,62,.45); z-index:80; display:none; align-items:center; justify-content:center;}
+  #overlay.open{display:flex;}
+  #modal{background:var(--board); border:1px solid var(--line2); border-radius:14px; padding:22px; width:min(430px, 92vw); box-shadow:0 24px 60px rgba(38,48,62,.3);}
+  #modal h2{font-family:'Chakra Petch'; font-size:16px; letter-spacing:.06em; margin-bottom:10px; color:var(--ink);}
+  #modal p{color:var(--muted); font-size:13px; line-height:1.55; margin-bottom:14px;}
+  #modal input[type=text], #modal textarea{
+    width:100%; background:#F5F7FA; color:var(--ink); border:1px solid var(--line2); border-radius:8px;
+    padding:9px 11px; font-family:'IBM Plex Mono'; font-size:12.5px; margin-bottom:14px;
+  }
+  #modal textarea{height:130px; resize:vertical;}
+  #modal .row{display:flex; gap:8px; justify-content:flex-end;}
+  #toasts{position:fixed; top:64px; right:16px; z-index:90; display:flex; flex-direction:column; gap:8px; pointer-events:none;}
+  .toast{
+    background:var(--board); border:1px solid var(--line2); border-left:3px solid var(--blue); border-radius:10px;
+    padding:10px 15px; font-size:12.5px; max-width:320px; box-shadow:0 10px 26px rgba(38,48,62,.22);
+    animation:slidein .28s cubic-bezier(.2,.8,.2,1); line-height:1.45; color:var(--ink);
+  }
+  .toast.good{border-left-color:var(--green);}
+  .toast.bad{border-left-color:var(--red);}
+  .toast b{font-family:'IBM Plex Mono'; font-size:12px;}
+  @keyframes slidein{from{transform:translateX(30px); opacity:0;} to{transform:none; opacity:1;}}
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{animation:none !important; transition:none !important;}
+  }
+  #confetti{position:fixed; inset:0; pointer-events:none; z-index:95;}
+</style>
+
+<header>
+  <div class="logo">COURSE <span class="q">QUEST</span><small>Industrial Engineering</small></div>
+  <div class="hud-group">
+    <select id="profileSel" aria-label="Student profile"></select>
+    <button class="btn" id="newProfile" title="Start a plan for another student">＋ Student</button>
+  </div>
+  <div class="xp">
+    <span class="level-badge" id="levelBadge">FRESHMAN</span>
+    <div class="xp-track" aria-hidden="true"><div class="xp-done" id="xpDone"></div><div class="xp-planned" id="xpPlanned"></div></div>
+    <span class="xp-label" id="xpLabel"></span>
+  </div>
+  <div class="hud-group">
+    <button class="btn ghost" id="undoBtn" title="Undo last change (Ctrl+Z)" disabled>↶ Undo</button>
+    <button class="btn ghost" id="saveBtn" title="Copy or load a saved plan">💾 Plans</button>
+    <button class="btn ghost danger" id="resetBtn" title="Reset this student's plan">Reset</button>
+  </div>
+</header>
+
+<nav>
+  <button class="tab active" data-view="tree">Skill Tree</button>
+  <button class="tab" data-view="plan">Semester Planner</button>
+  <div class="spacer"></div>
+  <div class="legend" id="legend"></div>
+  <div class="zoomer" id="zoomer">
+    <button class="btn" id="zoomOut" aria-label="Zoom out" title="Zoom out">−</button>
+    <button class="btn" id="zoomIn" aria-label="Zoom in" title="Zoom in">＋</button>
+    <button class="btn fit" id="zoomFit" title="Fit the tree to the window">FIT</button>
+  </div>
+</nav>
+
+<main>
+  <section class="view active" id="view-tree">
+    <div id="treeWrap"><div id="treeScale"><div id="treeCanvas">
+      <svg id="edgeSvg"></svg>
+    </div></div></div>
+  </section>
+  <section class="view" id="view-plan">
+    <div id="plannerBody">
+      <aside id="bank" data-drop="bank">
+        <h3>Course Bank</h3>
+        <input id="bankSearch" type="text" placeholder="🔍 Search courses…" aria-label="Search courses">
+        <div class="hint">Click a course for quick actions, or drag it into a semester. Drag back here to unschedule.</div>
+        <div id="bankList"></div>
+      </aside>
+      <div id="cols"></div>
+    </div>
+  </section>
+</main>
+
+<div id="tooltip"></div>
+<div id="pop" hidden></div>
+<div id="toasts"></div>
+<canvas id="confetti"></canvas>
+<div id="overlay"><div id="modal" role="dialog" aria-modal="true"></div></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   COURSE DATA — edit freely. lane: 1–4 = year column, 0 = electives band.
+   prereq / coreq are arrays of course codes.
+   ===================================================================== */
+const COURSES = [
+  // ---- Year 1 ----
+  {code:'WRI 101', name:'Academic Writing I',                          cr:3, lane:1, cat:'wri',  ico:'✍️'},
+  {code:'MTH 103', name:'Calculus I',                                  cr:4, lane:1, cat:'math', ico:'📐'},
+  {code:'MTH 104', name:'Calculus II',                                 cr:4, lane:1, cat:'math', ico:'📐', prereq:['MTH 103']},
+  {code:'PHY 101', name:'General Physics I',                           cr:3, lane:1, cat:'sci',  ico:'⚛️', coreq:['MTH 103']},
+  {code:'PHY 101L',name:'General Physics I Lab',                       cr:1, lane:1, cat:'sci',  ico:'🔬', coreq:['PHY 101']},
+  {code:'CHM 101', name:'General Chemistry I',                         cr:3, lane:1, cat:'sci',  ico:'🧪'},
+  {code:'CHM 101L',name:'General Chemistry I Lab',                     cr:1, lane:1, cat:'sci',  ico:'🧪', coreq:['CHM 101']},
+  {code:'NGN 110', name:'Intro to Engineering & Computing',            cr:4, lane:1, cat:'fnd',  ico:'🛠️'},
+  {code:'CMP 120', name:'Programming I',                               cr:3, lane:1, cat:'fnd',  ico:'💻', prereq:['NGN 110']},
+  {code:'MCE 236', name:'Engineering Drawing & Workshop',              cr:2, lane:1, cat:'fnd',  ico:'📏'},
+  {code:'WRI 102', name:'Academic Writing II',                         cr:3, lane:1, cat:'wri',  ico:'✍️', prereq:['WRI 101']},
+  // ---- Year 2 ----
+  {code:'MTH 203', name:'Calculus III',                                cr:3, lane:2, cat:'math', ico:'📐', prereq:['MTH 104']},
+  {code:'MTH 225', name:'Differential Equations & Linear Algebra',     cr:3, lane:2, cat:'math', ico:'🧮', prereq:['MTH 104']},
+  {code:'PHY 102', name:'General Physics II',                          cr:3, lane:2, cat:'sci',  ico:'⚡', prereq:['PHY 101']},
+  {code:'PHY 102L',name:'General Physics II Lab',                      cr:1, lane:2, cat:'sci',  ico:'🔬', coreq:['PHY 102']},
+  {code:'NGN 211', name:'Engineering Probability & Statistics',        cr:3, lane:2, cat:'fnd',  ico:'📊', prereq:['MTH 104']},
+  {code:'INE 202', name:'Fundamentals of Industrial Engineering',      cr:3, lane:2, cat:'core', ico:'⚙️', prereq:['NGN 110']},
+  {code:'INE 222', name:'Operations Research I',                       cr:3, lane:2, cat:'core', ico:'🔍', prereq:['MTH 225']},
+  {code:'INE 310', name:'Data Management & Modeling for IE',           cr:3, lane:2, cat:'core', ico:'☁️', prereq:['CMP 120','INE 202']},
+  {code:'MSE 330', name:'Materials Science',                           cr:3, lane:2, cat:'fnd',  ico:'🔩', prereq:['CHM 101']},
+  {code:'EGM 364', name:'Engineering Economy',                         cr:3, lane:2, cat:'fnd',  ico:'💰', prereq:['MTH 104']},
+  // ---- Year 3 ----
+  {code:'INE 302', name:'Manufacturing Processes for IE',              cr:3, lane:3, cat:'core', ico:'🏭', prereq:['MSE 330'], coreq:['INE 302L']},
+  {code:'INE 302L',name:'Manufacturing Processes Lab',                 cr:1, lane:3, cat:'core', ico:'🏭', coreq:['INE 302']},
+  {code:'INE 311', name:'Quality Engineering',                         cr:3, lane:3, cat:'core', ico:'✅', prereq:['NGN 211']},
+  {code:'INE 322', name:'Operations Research II',                      cr:3, lane:3, cat:'core', ico:'🔎', prereq:['INE 222']},
+  {code:'INE 323', name:'Stochastic Processes & Simulation',           cr:3, lane:3, cat:'core', ico:'🎲', prereq:['NGN 211','INE 222']},
+  {code:'INE 331', name:'Analysis of Production Systems',              cr:3, lane:3, cat:'core', ico:'🏗️', prereq:['INE 222','NGN 211']},
+  {code:'INE 49406',name:'Ergonomics & Work Analysis',                 cr:3, lane:3, cat:'core', ico:'🧍', prereq:['INE 202']},
+  {code:'STA 401', name:'Intro to Data Mining',                        cr:3, lane:3, cat:'elec', ico:'⛏️', prereq:['CMP 120','NGN 211']},
+  {code:'ENG 204', name:'Advanced Academic Writing',                   cr:3, lane:3, cat:'wri',  ico:'📝', prereq:['WRI 102']},
+  {code:'INE 333', name:'Facility Design & Operations',                cr:3, lane:3, cat:'core', ico:'🏢', prereq:['INE 331']},
+  {code:'INE 332', name:'Analysis of Supply Chains',                   cr:3, lane:3, cat:'core', ico:'🚚', prereq:['INE 331']},
+  {code:'INE 460', name:'Industrial Resource Planning',                cr:3, lane:3, cat:'core', ico:'📦', prereq:['INE 331']},
+  // ---- Year 4 ----
+  {code:'INE 415', name:'Design of Experiments',                       cr:3, lane:4, cat:'core', ico:'⚗️', prereq:['INE 311']},
+  {code:'INE 417', name:'Six Sigma Methodology',                       cr:3, lane:4, cat:'core', ico:'🎯', prereq:['INE 311']},
+  {code:'INE 418', name:'Decision Science for Service & Mfg Systems',  cr:3, lane:4, cat:'core', ico:'🧭', prereq:['INE 323']},
+  {code:'INE 431', name:'Industrial Scheduling',                       cr:3, lane:4, cat:'core', ico:'🗓️', prereq:['INE 331']},
+  {code:'INE 439', name:'Fundamentals of Manufacturing Systems',       cr:3, lane:4, cat:'core', ico:'🤖', prereq:['INE 302']},
+  {code:'INE 465', name:'Service Systems Engineering',                 cr:3, lane:4, cat:'core', ico:'🤝', prereq:['INE 331']},
+  {code:'INE 412', name:'Maintenance Engineering',                     cr:3, lane:4, cat:'elec', ico:'🔧', prereq:['NGN 211']},
+  {code:'NGN 397', name:'Professional Training in IE',                 cr:1, lane:4, cat:'core', ico:'💼', noSuggest:true}, // internship — placed by the advisor, never auto-suggested
+  {code:'INE 490', name:'Senior Design Project I',                     cr:3, lane:4, cat:'core', ico:'📋', prereq:['INE 331','INE 332']},
+  {code:'INE 491', name:'Senior Design Project II',                    cr:3, lane:4, cat:'core', ico:'🏆', prereq:['INE 490']},
+  // ---- Electives & General Education band ----
+  {code:'NGN 312', name:'Intro to AI & Data Science',                  cr:3, lane:0, cat:'elec', ico:'🧠'},
+  {code:'INE 450', name:'Safety Engineering',                          cr:3, lane:0, cat:'elec', ico:'🦺'},
+  {code:'INE 49405',name:'Procurement & Warehousing Operations',       cr:3, lane:0, cat:'elec', ico:'🏬'},
+  {code:'INE 416', name:'Reliability Engineering',                     cr:3, lane:0, cat:'elec', ico:'⏱️', prereq:['NGN 211']},
+  {code:'INE 425', name:'Decision Analysis',                           cr:3, lane:0, cat:'elec', ico:'⚖️', prereq:['NGN 211']},
+  {code:'INE 49407',name:'Systems Science & System Dynamics',          cr:3, lane:0, cat:'elec', ico:'🔄'},
+  {code:'GER 1',   name:'History & Culture of the Arab World',         cr:3, lane:0, cat:'ger',  ico:'🏛️'},
+  {code:'GER 2',   name:'Culture in a Critical Perspective',           cr:3, lane:0, cat:'ger',  ico:'🌍'},
+  {code:'GER 3',   name:'Arts & Literature',                           cr:3, lane:0, cat:'ger',  ico:'🎭'},
+  {code:'GER 4',   name:'Human Interaction & Behavior',                cr:3, lane:0, cat:'ger',  ico:'💬'},
+  {code:'GER 5',   name:'Elective from GER List',                      cr:3, lane:0, cat:'ger',  ico:'📚'},
+  {code:'FREE 1',  name:'Free Elective 1',                             cr:3, lane:0, cat:'free', ico:'🃏'},
+  {code:'FREE 2',  name:'Free Elective 2',                             cr:3, lane:0, cat:'free', ico:'🎪'},
+];
+const DEGREE_CREDITS = 130;
+const CATS = {
+  math:{label:'Math',       col:'var(--c-math)'},
+  sci: {label:'Sciences',   col:'var(--c-sci)'},
+  fnd: {label:'Foundation', col:'var(--c-fnd)'},
+  core:{label:'IE Core',    col:'var(--c-core)'},
+  wri: {label:'Writing',    col:'var(--c-wri)'},
+  elec:{label:'Electives',  col:'var(--c-elec)'},
+  ger: {label:'General Ed', col:'var(--c-ger)'},
+  free:{label:'Free',       col:'var(--c-free)'},
+};
+const FILL_PRIORITY = {core:0, math:1, fnd:2, sci:3, wri:4, ger:5, free:6, elec:7};
+const MARKERS = ['#26303E','#2456C4','#159A8C','#D63A3A','#E86AA0']; // whiteboard marker colors, rotate per year
+const LEVELS = [[0,'FRESHMAN'],[30,'SOPHOMORE'],[60,'JUNIOR'],[90,'SENIOR'],[DEGREE_CREDITS,'GRADUATE 🎓']];
+const TERMS = ['Spring','Summer','Fall']; // chronological within a year
+const byCode = Object.fromEntries(COURSES.map(c=>[c.code,c]));
+COURSES.forEach(c=>{ c.prereq=c.prereq||[]; c.coreq=c.coreq||[]; });
+
+/* ===================== State & persistence ===================== */
+const LS_KEY = 'courseQuest.v1';
+let state = null;
+function defaultSemesters(){
+  return [['Fall',2026],['Spring',2027],['Summer',2027],['Fall',2027],['Spring',2028],['Summer',2028],['Fall',2028],['Spring',2029]]
+    .map(([t,y],i)=>({id:'s'+i, term:t, year:y, courses:[]}));
+}
+function newProfile(name){
+  return {id:'p'+Date.now()+Math.floor(Math.random()*1e4), name, completed:[], semesters:defaultSemesters()};
+}
+function defaultState(){ const p=newProfile('Demo Student'); return {profiles:[p], activeId:p.id}; }
+function load(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){ const s = JSON.parse(raw); if(s && s.profiles && s.profiles.length) return s; }
+  }catch(e){}
+  return defaultState();
+}
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+function P(){ return state.profiles.find(p=>p.id===state.activeId) || state.profiles[0]; }
+
+/* ---- undo ---- */
+let undoStack=[];
+function snap(){
+  undoStack.push(JSON.stringify(state));
+  if(undoStack.length>40) undoStack.shift();
+  refreshUndo();
+}
+function undo(){
+  if(!undoStack.length) return;
+  state=JSON.parse(undoStack.pop());
+  save(); renderAll(); refreshUndo();
+  toast('↶ Undone');
+}
+function refreshUndo(){ document.getElementById('undoBtn').disabled = !undoStack.length; }
+document.getElementById('undoBtn').addEventListener('click', undo);
+window.addEventListener('keydown', e=>{
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z' && !/INPUT|TEXTAREA/.test(e.target.tagName)){
+    e.preventDefault(); undo();
+  }
+});
+
+/* ===================== Derived helpers ===================== */
+function semIndexOf(code, prof){
+  for(let i=0;i<prof.semesters.length;i++) if(prof.semesters[i].courses.includes(code)) return i;
+  return -1;
+}
+function isCompleted(code){ return P().completed.includes(code); }
+function isAvailable(c){
+  if(isCompleted(c.code) || !c.prereq.every(p=>isCompleted(p))) return false;
+  // a co-req (e.g. a lab) only lights up once its partner course is done or ready too
+  return c.coreq.every(q=>{ const qc=byCode[q]; return !qc || isCompleted(q) || qc.prereq.every(p=>isCompleted(p)); });
+}
+function courseState(c){
+  if(isCompleted(c.code)) return 'done';
+  const si = semIndexOf(c.code, P());
+  if(si>=0) return 'planned';
+  return isAvailable(c) ? 'avail' : 'locked';
+}
+function missingPrereqsAt(code, si){
+  const c = byCode[code]; const prof=P(); const miss=[];
+  for(const p of c.prereq){
+    if(isCompleted(p)) continue;
+    const pi = semIndexOf(p, prof);
+    if(pi<0 || pi>=si) miss.push(p+' (prereq)');
+  }
+  for(const q of c.coreq){
+    if(isCompleted(q)) continue;
+    const qi = semIndexOf(q, prof);
+    if(qi<0 || qi>si) miss.push(q+' (co-req)');
+  }
+  return miss;
+}
+function credits(codes){ return codes.reduce((s,c)=>s+(byCode[c]?byCode[c].cr:0),0); }
+function semLabel(s){ return s.term.slice(0,2).toUpperCase()+String(s.year).slice(2); }
+function rotFor(code){ // deterministic little "fridge magnet" tilt
+  let h=0; for(const ch of code) h=(h*31+ch.charCodeAt(0))|0;
+  return ((Math.abs(h)%29)/10-1.4).toFixed(1)+'deg';
+}
+
+/* ===================== Layout: skill tree ===================== */
+const NODE_W=196, ROW_H=82, COL_GAP=104, PAD_X=46, PAD_TOP=56;
+const laneCourses = n => COURSES.filter(c=>c.lane===n);
+const pos = {};
+(function layout(){
+  let maxRows=0;
+  for(let l=1;l<=4;l++){
+    const x = PAD_X + (l-1)*(NODE_W+COL_GAP);
+    laneCourses(l).forEach((c,i)=>{ pos[c.code]={x, y:PAD_TOP+i*ROW_H}; });
+    maxRows = Math.max(maxRows, laneCourses(l).length);
+  }
+  const bandTop = PAD_TOP + maxRows*ROW_H + 64;
+  const perRow = 5, bandGapX=28, bandGapY=78;
+  laneCourses(0).forEach((c,i)=>{
+    pos[c.code] = {x: PAD_X + (i%perRow)*(NODE_W+bandGapX), y: bandTop + Math.floor(i/perRow)*bandGapY};
+  });
+  const bandRows = Math.ceil(laneCourses(0).length/perRow);
+  window.__canvas = {
+    w: Math.max(PAD_X*2 + 4*NODE_W + 3*COL_GAP, PAD_X*2 + perRow*(NODE_W+bandGapX)),
+    h: bandTop + bandRows*bandGapY + 40,
+    bandTop
+  };
+})();
+
+const treeWrap = document.getElementById('treeWrap');
+const treeCanvas = document.getElementById('treeCanvas');
+const edgeSvg = document.getElementById('edgeSvg');
+const tooltip = document.getElementById('tooltip');
+let edgeEls = [];
+
+function buildTree(){
+  treeCanvas.style.width = __canvas.w+'px';
+  treeCanvas.style.height = __canvas.h+'px';
+  edgeSvg.setAttribute('width', __canvas.w); edgeSvg.setAttribute('height', __canvas.h);
+  ['First Year','Second Year','Third Year','Fourth Year'].forEach((t,i)=>{
+    const el=document.createElement('div'); el.className='lane-label'; el.textContent=t;
+    el.style.left=(PAD_X+i*(NODE_W+COL_GAP))+'px'; el.style.width=NODE_W+'px';
+    treeCanvas.appendChild(el);
+  });
+  const bl=document.createElement('div'); bl.className='band-label';
+  bl.textContent='General Education · Electives';
+  bl.style.left=PAD_X+'px'; bl.style.top=(__canvas.bandTop-30)+'px';
+  treeCanvas.appendChild(bl);
+
+  // edges
+  edgeEls=[];
+  for(const c of COURSES){
+    for(const p of c.prereq) addEdge(p, c.code, false);
+    for(const q of c.coreq) if(byCode[q] && q<c.code) addEdge(q, c.code, true); // draw each coreq pair once
+  }
+  // nodes
+  for(const c of COURSES){
+    const n=document.createElement('div');
+    n.className='node'; n.id='node-'+cssId(c.code); n.tabIndex=0;
+    n.style.left=pos[c.code].x+'px'; n.style.top=pos[c.code].y+'px';
+    n.style.setProperty('--cat', CATS[c.cat].col);
+    n.innerHTML = `<span class="ico">${c.ico}</span><span class="tx"><span class="code">${c.code}</span><span class="nm">${c.name}</span></span><span class="cr">${c.cr} cr</span><span class="st"></span><span class="semtag" hidden></span>`;
+    n.addEventListener('click', e=>{ e.stopPropagation(); openPop(c, n.getBoundingClientRect()); });
+    n.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault(); openPop(c, n.getBoundingClientRect());} });
+    n.addEventListener('mouseenter', e=>{ if(!pinned) highlight(c.code,true); showTip(c,e); });
+    n.addEventListener('mousemove', e=>moveTip(e));
+    n.addEventListener('mouseleave', ()=>{ if(!pinned) highlight(c.code,false); tooltip.style.display='none'; });
+    treeCanvas.appendChild(n);
+  }
+}
+function cssId(code){ return code.replace(/\s+/g,'_'); }
+function addEdge(from,to,coreq){
+  if(!pos[from]||!pos[to]) return;
+  const a=pos[from], b=pos[to];
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+  let d;
+  const ax=a.x+NODE_W, ay=a.y+30, bx=b.x, by=b.y+30;
+  if(Math.abs(a.x-b.x)<4){ // same column → hug the left side
+    const x=a.x, off=26;
+    d=`M ${x} ${ay} C ${x-off} ${ay}, ${x-off} ${by}, ${x} ${by}`;
+  }else if(bx>ax-10){
+    const mx=(ax+bx)/2;
+    d=`M ${ax} ${ay} C ${mx} ${ay}, ${mx} ${by}, ${bx} ${by}`;
+  }else{ // leftward (rare)
+    d=`M ${a.x} ${ay} C ${a.x-60} ${ay}, ${b.x+NODE_W+60} ${by}, ${b.x+NODE_W} ${by}`;
+  }
+  path.setAttribute('d', d);
+  path.setAttribute('class','edge'+(coreq?' coreq':''));
+  path.dataset.from=from; path.dataset.to=to;
+  edgeSvg.appendChild(path);
+  edgeEls.push(path);
+}
+function ancestors(code, acc){ for(const p of byCode[code].prereq){ if(!acc.has(p)){acc.add(p); ancestors(p,acc);} } return acc; }
+function descendants(code, acc){
+  for(const c of COURSES) if(c.prereq.includes(code) && !acc.has(c.code)){ acc.add(c.code); descendants(c.code,acc); }
+  return acc;
+}
+function highlight(code,on){
+  const up=on?ancestors(code,new Set()):new Set(), down=on?descendants(code,new Set()):new Set();
+  for(const c of COURSES){
+    const el=document.getElementById('node-'+cssId(c.code));
+    el.classList.remove('hl-up','hl-down','hl-dim');
+    if(!on || c.code===code) continue;
+    if(up.has(c.code)) el.classList.add('hl-up');
+    else if(down.has(c.code)) el.classList.add('hl-down');
+    else el.classList.add('hl-dim');
+  }
+  for(const e of edgeEls){
+    e.classList.remove('up','down','dim');
+    if(!on) continue;
+    const f=e.dataset.from, t=e.dataset.to;
+    if((up.has(f)||f===code)&&(up.has(t)||t===code)) e.classList.add('up');
+    else if((down.has(f)||f===code)&&(down.has(t)||t===code)) e.classList.add('down');
+    else e.classList.add('dim');
+  }
+}
+function showTip(c,e){
+  const st=courseState(c);
+  const stTxt={done:'<span style="color:var(--green)">✔ Completed</span>', avail:'<span style="color:#A57C00">⚡ Ready to take — click for options</span>',
+    planned:'<span style="color:#2456C4">📌 Planned — click for options</span>', locked:'<span style="color:var(--red)">🔒 Locked — finish prereqs first</span>'}[st];
+  const req = c.prereq.length? c.prereq.map(p=>{
+      const ok=isCompleted(p); return `<b style="color:${ok?'var(--green)':'var(--red)'}">${p}</b>`;
+    }).join(', ') : '<b>none</b>';
+  const co = c.coreq.length? `<div class="t-req">Take with: <b>${c.coreq.join(', ')}</b></div>`:'';
+  tooltip.innerHTML=`<span class="t-code">${c.code}</span> · ${c.cr} cr<br>${c.name}
+    <div class="t-req">Needs: ${req}</div>${co}<div class="t-state">${stTxt}</div>`;
+  tooltip.style.display='block'; moveTip(e);
+}
+function moveTip(e){
+  const w=tooltip.offsetWidth, h=tooltip.offsetHeight;
+  let x=e.clientX+16, y=e.clientY+14;
+  if(x+w>innerWidth-10) x=e.clientX-w-14;
+  if(y+h>innerHeight-10) y=e.clientY-h-12;
+  tooltip.style.left=x+'px'; tooltip.style.top=y+'px';
+}
+
+function refreshTree(){
+  for(const c of COURSES){
+    const el=document.getElementById('node-'+cssId(c.code));
+    const st=courseState(c);
+    el.classList.toggle('done', st==='done');
+    el.classList.toggle('avail', st==='avail');
+    el.classList.toggle('locked', st==='locked');
+    el.classList.toggle('planned', st==='planned');
+    el.querySelector('.st').textContent = st==='done'?'✔':st==='avail'?'⚡':st==='locked'?'🔒':'';
+    const tag=el.querySelector('.semtag');
+    const si=semIndexOf(c.code,P());
+    if(st==='planned' && si>=0){ tag.textContent=semLabel(P().semesters[si]); tag.hidden=false; }
+    else tag.hidden=true;
+  }
+}
+
+/* ---- grab-to-pan on tree background ---- */
+(function(){
+  let pan=null;
+  treeWrap.addEventListener('pointerdown', e=>{
+    if(e.target.closest('.node')) return;
+    pan={x:e.clientX, y:e.clientY, sl:treeWrap.scrollLeft, st:treeWrap.scrollTop};
+    treeWrap.classList.add('panning');
+  });
+  window.addEventListener('pointermove', e=>{
+    if(!pan) return;
+    treeWrap.scrollLeft = pan.sl-(e.clientX-pan.x);
+    treeWrap.scrollTop  = pan.st-(e.clientY-pan.y);
+  });
+  window.addEventListener('pointerup', ()=>{ pan=null; treeWrap.classList.remove('panning'); });
+})();
+
+/* ===================== Mutations ===================== */
+function detach(code){
+  const prof=P();
+  prof.completed=prof.completed.filter(x=>x!==code);
+  for(const s of prof.semesters) s.courses=s.courses.filter(x=>x!==code);
+}
+function markDone(code, withPrereqs){
+  snap();
+  const prof=P();
+  const before = COURSES.filter(isAvailable).map(x=>x.code);
+  const codes = withPrereqs? [...ancestors(code,new Set()), code] : [code];
+  let added=0;
+  for(const cd of codes){
+    if(isCompleted(cd)) continue;
+    detach(cd); prof.completed.push(cd); added++;
+  }
+  const unlocked = COURSES.filter(x=>isAvailable(x)&&!before.includes(x.code)).map(x=>x.code);
+  if(unlocked.length) toast(`🔓 Unlocked: <b>${unlocked.join('</b>, <b>')}</b>`, 'good');
+  else toast(`✔ ${added>1? added+' courses':'<b>'+code+'</b>'} completed!`, 'good');
+  burst();
+  save(); renderAll();
+}
+function unmarkDone(code){
+  snap();
+  P().completed=P().completed.filter(x=>x!==code);
+  toast(`↩ <b>${code}</b> moved back to not-taken.`);
+  save(); renderAll();
+}
+function moveCourse(code, dropKey, opts){
+  if(!(opts&&opts.noSnap)) snap();
+  const prof=P();
+  detach(code);
+  if(dropKey==='past'){
+    prof.completed.push(code);
+    burst();
+  }else if(dropKey.startsWith('sem:')){
+    const s=prof.semesters.find(s=>s.id===dropKey.slice(4));
+    if(s){
+      s.courses.push(code);
+      const si=prof.semesters.indexOf(s);
+      const miss=missingPrereqsAt(code,si);
+      if(miss.length) toast(`⚠️ <b>${code}</b> in ${s.term} ${s.year} is missing: ${miss.join(', ')}`, 'bad');
+    }
+  } // 'bank' → just detached
+  save(); renderAll();
+}
+function addSemester(){
+  snap();
+  const prof=P();
+  const last=prof.semesters[prof.semesters.length-1];
+  const nxt = last? nextTermAfter(last.term,last.year) : {term:'Fall', year:new Date().getFullYear()};
+  const s={id:'s'+Date.now(), term:nxt.term, year:nxt.year, courses:[]};
+  prof.semesters.push(s);
+  save(); renderAll();
+  return s;
+}
+function removeSemester(idx){
+  snap();
+  const prof=P(); const s=prof.semesters[idx];
+  if(s.courses.length) toast(`↩ ${s.courses.length} course(s) from ${s.term} ${s.year} returned to the bank.`);
+  prof.semesters.splice(idx,1);
+  save(); renderAll();
+}
+function markSemesterDone(idx){
+  const prof=P(); const s=prof.semesters[idx];
+  if(!s.courses.length){ toast('Nothing in that semester yet.'); return; }
+  snap();
+  const n=s.courses.length;
+  for(const code of [...s.courses]){ detach(code); prof.completed.push(code); }
+  toast(`🏁 ${s.term} ${s.year} finished — ${n} course(s) moved to Past Courses.`, 'good');
+  burst();
+  save(); renderAll();
+}
+function suggestFill(idx){
+  const prof=P(); const s=prof.semesters[idx];
+  const limit = s.term==='Summer'?6:16;
+  let loadNow = credits(s.courses);
+  if(loadNow>=limit){ toast(`${s.term} ${s.year} is already at ${loadNow} cr.`); return; }
+  snap();
+  // what counts as "satisfied" before this semester
+  const doneBefore = new Set(prof.completed);
+  prof.semesters.slice(0,idx).forEach(x=>x.courses.forEach(c=>doneBefore.add(c)));
+  const inThis = new Set(s.courses);
+  const planned = new Set(); prof.semesters.forEach(x=>x.courses.forEach(c=>planned.add(c)));
+  const candidates = COURSES
+    .filter(c=>!c.noSuggest && !doneBefore.has(c.code) && !planned.has(c.code))
+    .filter(c=>c.prereq.every(p=>doneBefore.has(p)))
+    .sort((a,b)=>{ // earlier years first (GER/electives are fillers), then required categories
+      const la=a.lane||9, lb=b.lane||9;
+      return (la-lb) || (FILL_PRIORITY[a.cat]-FILL_PRIORITY[b.cat]) || (a.code<b.code?-1:1);
+    });
+  const added=[];
+  for(const c of candidates){
+    if(inThis.has(c.code)) continue;
+    // pull in any co-req partner not already satisfied
+    const partners = c.coreq.filter(q=>byCode[q] && !doneBefore.has(q) && !inThis.has(q));
+    if(partners.some(q=>planned.has(q))) continue; // partner locked in another semester
+    if(partners.some(q=>!byCode[q].prereq.every(p=>doneBefore.has(p)))) continue;
+    const cost = c.cr + credits(partners);
+    if(loadNow+cost>limit) continue;
+    for(const code of [c.code, ...partners]){
+      s.courses.push(code); inThis.add(code); planned.add(code); added.push(code);
+    }
+    loadNow += cost;
+  }
+  if(added.length){
+    toast(`✨ Suggested <b>${added.join('</b>, <b>')}</b> for ${s.term} ${s.year} (${loadNow} cr). Adjust as you like!`, 'good');
+    save(); renderAll();
+  }else{
+    undoStack.pop(); refreshUndo();
+    toast('Nothing eligible fits in that semester — check prereqs in earlier terms.');
+  }
+}
+function nextTermAfter(term, year){
+  const i=TERMS.indexOf(term);
+  return i===TERMS.length-1 ? {term:TERMS[0], year:year+1} : {term:TERMS[i+1], year};
+}
+
+/* ===================== Action card ===================== */
+const pop=document.getElementById('pop');
+let popCode=null, pinned=null;
+function openPop(c, rect){
+  popCode=c.code;
+  // pin the prereq-chain highlight so it survives scrolling until the card is closed
+  pinned=c.code;
+  if(document.getElementById('view-tree').classList.contains('active')) highlight(c.code,true);
+  const st=courseState(c);
+  const prof=P();
+  const si=semIndexOf(c.code, prof);
+  const missing=[...ancestors(c.code,new Set())].filter(p=>!isCompleted(p));
+  let html=`<div class="p-head"><span class="ico">${c.ico}</span>
+    <span><span class="p-code">${c.code}</span><br><span class="p-nm">${c.name}</span></span>
+    <span class="p-cr">${c.cr} cr</span></div>`;
+  if(st!=='done'){
+    html+=`<button class="pop-btn good" data-act="done">✔&nbsp; Mark as done</button>`;
+    if(missing.length) html+=`<button class="pop-btn good" data-act="doneAll">⚡&nbsp; Done incl. ${missing.length} prereq${missing.length>1?'s':''}</button>`;
+  }else{
+    html+=`<button class="pop-btn warn" data-act="undone">↩&nbsp; Mark as not done</button>`;
+  }
+  if(si>=0) html+=`<button class="pop-btn warn" data-act="unplan">🗑&nbsp; Remove from ${prof.semesters[si].term} ${prof.semesters[si].year}</button>`;
+  html+=`<div class="p-sec">${si>=0?'Move to semester':'Plan into semester'}</div><div class="sem-quick">`;
+  prof.semesters.forEach((s,i)=>{
+    html+=`<button data-sem="${s.id}" class="${i===si?'cur':''}" title="${s.term} ${s.year} · ${credits(s.courses)} cr planned">${semLabel(s)}</button>`;
+  });
+  html+=`<button data-act="newSem" title="Add the next semester and place it there">＋</button></div>`;
+  if(c.prereq.length){
+    const deeper=missing.filter(p=>!c.prereq.includes(p)).length;
+    html+=`<div class="p-req">Needs: `+c.prereq.map(p=>
+        `<b style="color:${isCompleted(p)?'var(--green)':'var(--red)'}">${p}${isCompleted(p)?' ✓':''}</b>`
+      ).join(', ')+(deeper?` <span style="color:var(--faint)">+${deeper} earlier</span>`:'')+`</div>`;
+  }
+  if(c.coreq.length) html+=`<div class="p-req">Take with: <b>${c.coreq.join(', ')}</b></div>`;
+  pop.innerHTML=html;
+  pop.style.setProperty('--pcat', CATS[c.cat].col);
+  pop.hidden=false;
+  const w=pop.offsetWidth, h=pop.offsetHeight;
+  let x=rect.left+rect.width/2-w/2, y=rect.bottom+8;
+  x=Math.max(8, Math.min(x, innerWidth-w-8));
+  if(y+h>innerHeight-8) y=rect.top-h-8;
+  if(y<8) y=8;
+  pop.style.left=x+'px'; pop.style.top=y+'px';
+  tooltip.style.display='none';
+}
+function closePop(){
+  pop.hidden=true; popCode=null;
+  if(pinned){ highlight(pinned,false); pinned=null; }
+}
+pop.addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b||!popCode) return;
+  const code=popCode;
+  if(b.dataset.sem){ moveCourse(code, 'sem:'+b.dataset.sem); }
+  else switch(b.dataset.act){
+    case 'done':    markDone(code,false); break;
+    case 'doneAll': markDone(code,true);  break;
+    case 'undone':  unmarkDone(code);     break;
+    case 'unplan':  moveCourse(code,'bank'); break;
+    case 'newSem':{ const s=addSemester(); moveCourse(code,'sem:'+s.id,{noSnap:true}); break; }
+  }
+  closePop();
+});
+document.addEventListener('pointerdown', e=>{
+  if(e.target.closest('#pop')) return;
+  const onTreeBg = e.target.closest('#treeWrap') && !e.target.closest('.node');
+  if(!pop.hidden){
+    // close the card; if tapping the tree background, keep the chain lit so it survives scrolling
+    pop.hidden=true; popCode=null;
+    if(!onTreeBg && pinned){ highlight(pinned,false); pinned=null; }
+  }else if(pinned && !e.target.closest('.node')){
+    highlight(pinned,false); pinned=null;
+  }
+});
+window.addEventListener('keydown', e=>{ if(e.key==='Escape') closePop(); });
+
+/* ===================== Planner ===================== */
+const colsEl=document.getElementById('cols');
+const bankList=document.getElementById('bankList');
+let bankQuery='';
+document.getElementById('bankSearch').addEventListener('input', e=>{
+  bankQuery=e.target.value.trim().toLowerCase();
+  buildPlanner();
+});
+
+function buildPlanner(){
+  const prof=P();
+  // bank (grouped by category, filtered by search)
+  bankList.innerHTML='';
+  let unassigned = COURSES.filter(c=>!isCompleted(c.code)&&semIndexOf(c.code,prof)<0);
+  if(bankQuery) unassigned = unassigned.filter(c=>(c.code+' '+c.name).toLowerCase().includes(bankQuery));
+  if(!unassigned.length){
+    const d=document.createElement('div'); d.className='bank-empty';
+    d.textContent = bankQuery? 'No courses match “'+bankQuery+'”.' : 'Every course is planned or completed. 🎉';
+    bankList.appendChild(d);
+  }
+  for(const key of Object.keys(CATS)){
+    const items=unassigned.filter(c=>c.cat===key);
+    if(!items.length) continue;
+    const h=document.createElement('div'); h.className='bank-cat'; h.textContent=CATS[key].label; bankList.appendChild(h);
+    const wrap=document.createElement('div'); wrap.style.cssText='display:flex;flex-direction:column;gap:6px;';
+    items.forEach(c=>wrap.appendChild(chipEl(c,'bank',-1)));
+    bankList.appendChild(wrap);
+  }
+  // columns
+  colsEl.innerHTML='';
+  colsEl.appendChild(semColEl({past:true}));
+  let cum = credits(prof.completed);
+  prof.semesters.forEach((s,i)=>{
+    const load=credits(s.courses); cum+=load;
+    colsEl.appendChild(semColEl({sem:s, idx:i, load, cum}));
+  });
+  const add=document.createElement('button'); add.id='addSem'; add.textContent='＋ ADD SEMESTER'; add.title='Add the next term';
+  add.addEventListener('click', addSemester);
+  colsEl.appendChild(add);
+}
+function semColEl({past, sem, idx, load, cum}){
+  const col=document.createElement('div');
+  col.className='sem-col'+(past?' past':'');
+  col.dataset.drop = past ? 'past' : 'sem:'+sem.id;
+  const prof=P();
+  const codes = past? prof.completed : sem.courses;
+  const mk = past? '#26303E' : MARKERS[sem.year % MARKERS.length];
+  col.style.setProperty('--mk', mk);
+  const title = past? `<span class="term">PAST COURSES</span>` : `<span class="term">${sem.term.toUpperCase()}</span><span class="yr">${sem.year}</span>`;
+  const tools = past? '' : `<span class="col-tools">
+      <button class="col-fill" title="Suggest courses for this semester">✨</button>
+      <button class="col-done" title="Semester finished — move all its courses to Past Courses">✓</button>
+      <button class="col-x" title="Remove semester (courses return to bank)">✕</button>
+    </span>`;
+  col.innerHTML=`<div class="col-head">${title}${tools}</div><div class="col-body"></div>`;
+  const body=col.querySelector('.col-body');
+  codes.forEach(code=>{ const c=byCode[code]; if(c) body.appendChild(chipEl(c, past?'past':'sem', idx)); });
+  const foot=document.createElement('div'); foot.className='col-foot';
+  if(past){
+    foot.innerHTML=`<span class="load"><b>${credits(codes)}</b> cr earned</span>`;
+  }else{
+    const limit = sem.term==='Summer'?7:18;
+    foot.innerHTML=`<span class="load${load>limit?' over':''}" title="${load>limit?'Over the usual '+limit+' cr load':''}"><b>${load}</b> cr</span><span class="cum">Σ <b>${cum}</b></span>`;
+  }
+  col.appendChild(foot);
+  if(!past){
+    col.querySelector('.col-x').addEventListener('click', ()=>removeSemester(idx));
+    col.querySelector('.col-done').addEventListener('click', ()=>markSemesterDone(idx));
+    col.querySelector('.col-fill').addEventListener('click', ()=>suggestFill(idx));
+  }
+  return col;
+}
+function chipEl(c, where, semIdx){
+  const el=document.createElement('div');
+  el.className='chip'; el.tabIndex=0;
+  el.style.setProperty('--cat', CATS[c.cat].col);
+  if(where!=='bank') el.style.setProperty('--rot', rotFor(c.code));
+  el.dataset.code=c.code;
+  el.innerHTML=`<span class="ico">${c.ico}</span><span><span class="code">${c.code}</span><span class="nm">${c.name}</span></span><span class="cr">${c.cr}</span>`;
+  if(where==='sem'){
+    const miss=missingPrereqsAt(c.code, semIdx);
+    if(miss.length){ el.classList.add('invalid'); el.title='Missing: '+miss.join(', '); }
+  }
+  attachDrag(el, c);
+  el.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault(); openPop(c, el.getBoundingClientRect());} });
+  return el;
+}
+
+/* ---- pointer drag & drop (click = action card) ---- */
+let drag=null;
+function attachDrag(el, course){
+  el.addEventListener('pointerdown', e=>{
+    if(e.button!==0 && e.pointerType==='mouse') return;
+    e.preventDefault();
+    drag={course, srcEl:el, startX:e.clientX, startY:e.clientY, ghost:null, active:false};
+    window.addEventListener('pointermove', onDragMove);
+    window.addEventListener('pointerup', onDragUp, {once:true});
+  });
+}
+function onDragMove(e){
+  if(!drag) return;
+  if(!drag.active){
+    if(Math.hypot(e.clientX-drag.startX, e.clientY-drag.startY)<6) return;
+    drag.active=true;
+    drag.ghost=drag.srcEl.cloneNode(true);
+    drag.ghost.classList.add('ghost');
+    document.body.appendChild(drag.ghost);
+    drag.srcEl.classList.add('drag-src');
+  }
+  drag.ghost.style.left=(e.clientX-90)+'px';
+  drag.ghost.style.top=(e.clientY-20)+'px';
+  document.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));
+  const t=dropTargetAt(e.clientX,e.clientY);
+  if(t && t.el.classList) t.el.classList.add('drag-over');
+}
+function dropTargetAt(x,y){
+  const el=document.elementFromPoint(x,y);
+  if(!el) return null;
+  const zone=el.closest('[data-drop]');
+  return zone? {el:zone, key:zone.dataset.drop} : null;
+}
+function onDragUp(e){
+  window.removeEventListener('pointermove', onDragMove);
+  document.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));
+  if(!drag) return;
+  const d=drag; drag=null;
+  if(d.ghost) d.ghost.remove();
+  d.srcEl.classList.remove('drag-src');
+  if(!d.active){ // plain click → action card
+    openPop(d.course, d.srcEl.getBoundingClientRect());
+    return;
+  }
+  const t=dropTargetAt(e.clientX,e.clientY);
+  if(!t) return;
+  moveCourse(d.course.code, t.key);
+}
+
+/* ===================== HUD ===================== */
+function refreshHud(){
+  const prof=P();
+  const done=credits(prof.completed);
+  const planned=prof.semesters.reduce((s,x)=>s+credits(x.courses),0);
+  const pctD=Math.min(100, done/DEGREE_CREDITS*100);
+  const pctP=Math.min(100-pctD, planned/DEGREE_CREDITS*100);
+  document.getElementById('xpDone').style.width=pctD+'%';
+  document.getElementById('xpPlanned').style.width=pctP+'%';
+  document.getElementById('xpLabel').innerHTML=`<b>${done}</b> done · ${planned} planned / ${DEGREE_CREDITS} cr`;
+  let lvl=LEVELS[0][1];
+  for(const [min,name] of LEVELS) if(done>=min) lvl=name;
+  document.getElementById('levelBadge').textContent=lvl;
+  if(done+planned>=DEGREE_CREDITS && !window.__gradFired){ window.__gradFired=true; celebrate(); }
+  if(done+planned<DEGREE_CREDITS) window.__gradFired=false;
+}
+function refreshProfiles(){
+  const sel=document.getElementById('profileSel');
+  sel.innerHTML='';
+  for(const p of state.profiles){
+    const o=document.createElement('option'); o.value=p.id; o.textContent='👤 '+p.name;
+    if(p.id===state.activeId) o.selected=true;
+    sel.appendChild(o);
+  }
+}
+document.getElementById('profileSel').addEventListener('change', e=>{
+  state.activeId=e.target.value; undoStack=[]; refreshUndo(); save(); renderAll();
+});
+document.getElementById('newProfile').addEventListener('click', ()=>{
+  openModal(`<h2>New Student</h2><p>Start a fresh plan for a student.</p>
+    <input type="text" id="mInput" placeholder="Student name" maxlength="40">
+    <div class="row"><button class="btn" data-close>Cancel</button><button class="btn primary" id="mOk">Create</button></div>`,
+    ()=>{ const inp=document.getElementById('mInput'); inp.focus();
+      const create=()=>{
+        const name=inp.value.trim()||'Student';
+        const p=newProfile(name); state.profiles.push(p); state.activeId=p.id;
+        undoStack=[]; refreshUndo();
+        save(); closeModal(); renderAll(); toast(`🎮 New quest started for <b>${name}</b>!`,'good');
+      };
+      document.getElementById('mOk').addEventListener('click', create);
+      inp.addEventListener('keydown', e=>{ if(e.key==='Enter') create(); });
+    });
+});
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  const prof=P();
+  openModal(`<h2>Reset “${prof.name}”?</h2><p>Clears this student’s past courses and semester plan. ${state.profiles.length>1?'You can also delete the profile entirely.':''}</p>
+    <div class="row">
+      <button class="btn" data-close>Cancel</button>
+      ${state.profiles.length>1?'<button class="btn danger" id="mDel">Delete profile</button>':''}
+      <button class="btn primary" id="mOk">Reset plan</button>
+    </div>`,
+    ()=>{
+      document.getElementById('mOk').addEventListener('click', ()=>{
+        snap();
+        prof.completed=[]; prof.semesters=defaultSemesters();
+        save(); closeModal(); renderAll(); toast('Plan reset.');
+      });
+      const del=document.getElementById('mDel');
+      if(del) del.addEventListener('click', ()=>{
+        state.profiles=state.profiles.filter(p=>p.id!==prof.id);
+        state.activeId=state.profiles[0].id;
+        undoStack=[]; refreshUndo();
+        save(); closeModal(); renderAll(); toast('Profile deleted.');
+      });
+    });
+});
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  const data=JSON.stringify(P());
+  openModal(`<h2>Save / Load Plan</h2>
+    <p>Copy this code to save <b>${P().name}</b>’s plan (email it, keep it in a note) — or paste a saved code below and load it.</p>
+    <textarea id="mArea">${data.replace(/</g,'&lt;')}</textarea>
+    <div class="row"><button class="btn" data-close>Close</button><button class="btn" id="mCopy">Copy</button><button class="btn primary" id="mLoad">Load pasted code</button></div>`,
+    ()=>{
+      const area=document.getElementById('mArea');
+      document.getElementById('mCopy').addEventListener('click', ()=>{
+        area.select();
+        try{ navigator.clipboard.writeText(area.value).then(()=>toast('Copied!','good')); }
+        catch(e){ document.execCommand('copy'); toast('Copied!','good'); }
+      });
+      document.getElementById('mLoad').addEventListener('click', ()=>{
+        try{
+          const p=JSON.parse(area.value);
+          if(!p.name || !Array.isArray(p.completed) || !Array.isArray(p.semesters)) throw 0;
+          p.id='p'+Date.now();
+          state.profiles.push(p); state.activeId=p.id;
+          undoStack=[]; refreshUndo();
+          save(); closeModal(); renderAll(); toast(`Loaded plan for <b>${p.name}</b>.`,'good');
+        }catch(e){ toast('That code didn’t look like a saved plan.','bad'); }
+      });
+    });
+});
+
+/* ===================== Tabs & zoom ===================== */
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click', ()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===t));
+  document.getElementById('view-tree').classList.toggle('active', t.dataset.view==='tree');
+  document.getElementById('view-plan').classList.toggle('active', t.dataset.view==='plan');
+  document.getElementById('zoomer').style.visibility = t.dataset.view==='tree'?'visible':'hidden';
+  closePop();
+}));
+let zoom=1;
+function applyZoom(){
+  const sc=document.getElementById('treeScale');
+  sc.style.transform=`scale(${zoom})`;
+  sc.style.width=(__canvas.w*zoom)+'px'; sc.style.height=(__canvas.h*zoom)+'px';
+}
+function fitZoom(){
+  zoom=Math.max(0.5, Math.min(1.15, (treeWrap.clientWidth-24)/__canvas.w));
+  applyZoom();
+}
+document.getElementById('zoomIn').addEventListener('click', ()=>{ zoom=Math.min(1.2, +(zoom+0.1).toFixed(2)); applyZoom(); });
+document.getElementById('zoomOut').addEventListener('click', ()=>{ zoom=Math.max(0.5, +(zoom-0.1).toFixed(2)); applyZoom(); });
+document.getElementById('zoomFit').addEventListener('click', fitZoom);
+
+/* ===================== Legend ===================== */
+(function(){
+  const lg=document.getElementById('legend');
+  lg.innerHTML = Object.values(CATS).map(c=>`<span><i class="dot" style="background:${c.col}"></i>${c.label}</span>`).join('')
+    + `<span><i class="dot" style="background:var(--green)"></i>Done</span><span>⚡ Ready</span><span>🔒 Locked</span>`;
+})();
+
+/* ===================== Modal & toast ===================== */
+const overlay=document.getElementById('overlay'), modal=document.getElementById('modal');
+function openModal(html, after){
+  modal.innerHTML=html;
+  overlay.classList.add('open');
+  modal.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', closeModal));
+  if(after) after();
+}
+function closeModal(){ overlay.classList.remove('open'); }
+overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+window.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+function toast(html, kind){
+  const t=document.createElement('div'); t.className='toast'+(kind?' '+kind:''); t.innerHTML=html;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(()=>t.remove(),400); }, 3600);
+}
+
+/* ===================== Confetti ===================== */
+const cvs=document.getElementById('confetti'), ctx=cvs.getContext('2d');
+let parts=[], rafId=null;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function resizeCvs(){ cvs.width=innerWidth; cvs.height=innerHeight; }
+addEventListener('resize', resizeCvs); resizeCvs();
+function spawn(n, spread){
+  const colors=['#F2C230','#2FA96F','#2F5FD0','#D6478F','#7A4FC9','#E8862E'];
+  for(let i=0;i<n;i++){
+    parts.push({x:innerWidth/2+(Math.random()-0.5)*spread, y:-14, vx:(Math.random()-0.5)*7,
+      vy:2+Math.random()*4, r:3+Math.random()*4, a:Math.random()*Math.PI, va:(Math.random()-0.5)*0.3,
+      col:colors[Math.floor(Math.random()*colors.length)], life:130+Math.random()*80});
+  }
+  if(!rafId) tick();
+}
+function tick(){
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  parts=parts.filter(p=>p.life>0 && p.y<cvs.height+20);
+  for(const p of parts){
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.08; p.a+=p.va; p.life--;
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.a);
+    ctx.fillStyle=p.col; ctx.globalAlpha=Math.min(1,p.life/40);
+    ctx.fillRect(-p.r,-p.r/2,p.r*2,p.r); ctx.restore();
+  }
+  rafId = parts.length? requestAnimationFrame(tick) : null;
+  if(!parts.length) ctx.clearRect(0,0,cvs.width,cvs.height);
+}
+function burst(){ if(!reduceMotion) spawn(26, innerWidth*0.5); }
+function celebrate(){
+  if(reduceMotion){ toast('🎓 Full degree planned — quest complete!','good'); return; }
+  spawn(220, innerWidth*0.9);
+  toast('🎓 <b>QUEST COMPLETE!</b> The full degree is planned. Congratulations!','good');
+}
+
+/* ===================== Boot ===================== */
+function renderAll(){ refreshProfiles(); refreshTree(); buildPlanner(); refreshHud(); }
+state = load();
+buildTree();
+fitZoom();
+renderAll();
+refreshUndo();
+</script>
+
+</html>
