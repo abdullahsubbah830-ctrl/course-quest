@@ -480,7 +480,7 @@ const COURSES = [
   {code:'INE 302',  name:'Manufacturing Processes for Industrial Engineering',      cr:3, lane:3, cat:'core', ico:'🏭', prereq:['MCE 230','MCE 216L','INE 216L'], coreq:['INE 302L']},
   {code:'INE 302L', name:'Manufacturing Processes for Industrial Engineering Lab',  cr:1, lane:3, cat:'core', ico:'🔧', coreq:['INE 302']},
   {code:'INE 311',  name:'Quality Engineering',                                     cr:3, lane:3, cat:'core', ico:'✅', prereq:['NGN 211']},
-  {code:'INE 322',  name:'Operations Research II',                                  cr:3, lane:3, cat:'core', ico:'🔎', conc:['MTH 203']},
+  {code:'INE 322',  name:'Operations Research II',                                  cr:3, lane:3, cat:'core', ico:'🔎', prereq:['INE 222'], conc:['MTH 203']},
   {code:'INE 323',  name:'Stochastic Processes and Simulation',                     cr:3, lane:3, cat:'core', ico:'🎲', prereq:{'25':['INE 222','NGN 211'], '26':['INE 202','NGN 211']}},
   {code:'INE 331',  name:'Analysis of Production Systems',                          cr:3, lane:3, cat:'core', ico:'🏗️', prereq:['INE 222','NGN 211']},
   {code:'INE 332',  name:'Analysis of Supply Chains',                               cr:3, lane:3, cat:'core', ico:'🚚', prereq:['INE 331'], conc:['INE 322']},
